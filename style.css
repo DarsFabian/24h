@@ -1,0 +1,30 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #222;
+    margin: 0;
+    flex-direction: column;
+}
+
+canvas {
+    display: none; /* Caché au départ */
+    border: 2px solid white;
+}
+
+button {
+    padding: 15px 30px;
+    font-size: 20px;
+    cursor: pointer;
+    border: none;
+    background-color: lime;
+    color: black;
+    border-radius: 10px;
+    transition: 0.3s;
+}
+
+button:hover {
+    background-color: darkgreen;
+    color: white;
+}

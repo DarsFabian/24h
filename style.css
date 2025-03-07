@@ -50,3 +50,37 @@ button:hover {
     margin-bottom: 20px;
 }
 
+#scoreBoard {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 15px 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    color: white;
+    font-family: Arial, sans-serif;
+    box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.2);
+    border: 2px solid #00ff00;
+}
+
+#scoreBoard span {
+    color: #00ff00;
+    font-size: 26px;
+}
+
+#scoreTitle {
+    font-size: 18px;
+    font-weight: normal;
+    color: #ddd;
+    margin-bottom: 5px;
+}
+
+#bestScoreTitle {
+    font-size: 18px;
+    font-weight: normal;
+    color: #ffcc00;
+    margin-top: 10px;
+}

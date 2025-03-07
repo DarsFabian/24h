@@ -306,20 +306,7 @@ const draw = () => {
     for (let boid of boids)
         boid.draw(context);
 
-    context.fillStyle = ennemy.color;
-    context.beginPath();
-    context.arc(
-        ennemy.position.x,
-        ennemy.position.y,
-        snake_width * 1.3, // Twice the snake's width
-        0,
-        Math.PI * 2
-    );
-    context.fill();
-
-    console.log("Started pathfinding");
     let path = astar(ennemy.position, snake_positions[0]);
-    console.log("Pathfinding ended.");
 
     // Starting position for pathfinding
     context.fillStyle = "blue";

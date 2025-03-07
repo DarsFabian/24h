@@ -43,6 +43,84 @@ let game_running = false;
  */
 let boids = [];
 let snake_positions = [];
+let level = 1;
+let objective;
+let ennemy = {
+    color: "red",
+    position: {
+        x: undefined,
+        y: undefined
+    },
+    target_pos: {
+        x: undefined,
+        y: undefined
+    }
+}
+const compute_objective = () => {
+    objective = 100 * level * (level + 5);
+}
+
+function isSnakeBody(x, y) {
+    return snake_positions.some(segment => segment.x === x && segment.y === y);
+}
+
+function astar(start, goal) {
+    let openList = [];
+    let closedList = new Set();
+
+    openList.push({ pos: start, parent: null, g: 0, h: heuristic(start, goal), f: 0 });
+
+    function heuristic(a, b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
+
+    while (openList.length > 0) {
+        openList.sort((a, b) => a.f - b.f);
+        let current = openList.shift();
+
+        const distance = Math.hypot(current.pos.x - goal.x, current.pos.y - goal.y);
+
+        if (distance <= non_boids_speed) {
+            let path = [];
+            while (current) {
+                path.push(current.pos);
+                current = current.parent;
+            }
+            return path.reverse();
+        }
+
+        closedList.add(`${current.pos.x},${current.pos.y}`);
+
+        let neighbors = [
+            { x: current.pos.x + non_boids_speed, y: current.pos.y },
+            { x: current.pos.x - non_boids_speed, y: current.pos.y },
+            { x: current.pos.x, y: current.pos.y + non_boids_speed },
+            { x: current.pos.x, y: current.pos.y - non_boids_speed },
+            { x: current.pos.x + non_boids_speed, y: current.pos.y + non_boids_speed },
+            { x: current.pos.x - non_boids_speed, y: current.pos.y + non_boids_speed },
+            { x: current.pos.x + non_boids_speed, y: current.pos.y - non_boids_speed },
+            { x: current.pos.x - non_boids_speed, y: current.pos.y - non_boids_speed }
+        ];
+
+        for (let neighbor of neighbors) {
+            if (
+                neighbor.x < 0 || neighbor.y < 0 ||
+                neighbor.x >= canvas_size || neighbor.y >= canvas_size ||
+                closedList.has(`${neighbor.x},${neighbor.y}`) ||
+                isSnakeBody(neighbor.x, neighbor.y)
+            ) {
+                continue;
+            }
+
+            let g = current.g + (Math.abs(neighbor.x - current.pos.x) + Math.abs(neighbor.y - current.pos.y) === 20 ? 14 : 10);
+            let h = heuristic(neighbor, goal);
+            let f = g + h;
+
+            openList.push({ pos: neighbor, parent: current, g, h, f });
+        }
+    }
+    return [];
+}
 
 canvas.addEventListener("mousemove", event => {
     /**
@@ -79,8 +157,8 @@ const check_snake_death = () => {
         const distance = Math.hypot(snake_head.x - position.x, snake_head.y - position.y);
 
         if (distance < non_boids_speed) {
-            console.log("Game over");
             game_running = false;
+            score = 0;
             document.getElementById("gameOverScreen").style.display = "block";
         }
     }
@@ -135,7 +213,7 @@ const update_snake = () => {
         game_running = false;
         document.getElementById("gameOverScreen").style.display = "block";
         return; // Stoppe l'exécution de update_snake()
-    } 
+    }
 
     /**
      * If close enough, snap the head to the mouse
@@ -161,6 +239,10 @@ const update_snake = () => {
         snake_positions.pop();
 };
 
+const update_ennemy = () => {
+
+}
+
 /**
  * Check if the snake collided with an active boid
  */
@@ -174,14 +256,18 @@ const check_boids_collision = () => {
 
         // Si la tête touche le Boid, on le mange
         if (distance < snake_width / 2 + 7) { // 7 étant le rayon du Boid
-            snake_length += 10; // Augmenter la taille du Snake
+
+            if (level <= 3) {
+                snake_length += 10; // Augmenter la taille du Snake
+            }
+
             boids.splice(i, 1); // Supprimer le Boid mangé
-            boids.push(new Boid(canvas_size,boids)); // Ajouter un nouveau Boid
+            boids.push(new Boid(canvas_size, boids)); // Ajouter un nouveau Boid
 
             // Augmenter le score de 100 et l'afficher
             score += 100;
             scoreElement.textContent = score;
-            
+
             break; // Sortir de la boucle pour éviter des erreurs d'index
         }
     }
@@ -201,6 +287,32 @@ const draw = () => {
 
     for (let boid of boids)
         boid.draw(context);
+
+    context.fillStyle = ennemy.color;
+    context.beginPath();
+    context.arc(
+        ennemy.position.x,
+        ennemy.position.y,
+        snake_width * 1.3, // Twice the snake's width
+        0,
+        Math.PI * 2
+    );
+    context.fill();
+
+    console.log("Started pathfinding");
+    let path = astar(ennemy.position, snake_positions[0]);
+    console.log("Pathfinding ended.");
+
+    context.fillStyle = "blue";
+    context.beginPath();
+    context.arc(
+        path[0].x,
+        path[0].y,
+        10,
+        0,
+        Math.PI * 2
+    );
+    context.fill();
 }
 
 const game_loop = () => {
@@ -212,9 +324,16 @@ const game_loop = () => {
 
     draw();
 
+    if (score == objective) {
+        level++;
+        compute_objective();
+    }
+
     if (game_running)
         requestAnimationFrame(game_loop);
 }
+
+
 
 start_button.addEventListener("click", () => {
     game_running = true;
@@ -222,9 +341,13 @@ start_button.addEventListener("click", () => {
     canvas.style.display = "block";
 
     snake_positions = [{
-        x: mouse_x,
-        y: mouse_y
+        x: Math.random() * (canvas_size - 200) + 100,
+        y: Math.random() * (canvas_size - 200) + 100,
     }];
+
+    const player_pos = snake_positions[0];
+    ennemy.position.x = canvas_size - player_pos.x;
+    ennemy.position.y = canvas_size - player_pos.y;
 
     create_boids();
     game_loop();

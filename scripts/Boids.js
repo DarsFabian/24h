@@ -6,7 +6,7 @@ class Boid {
         this.borderPadding = 10;
         this.maxSpeed = 2;
         this.minSpeed = 0.5;
-        
+
         let validPosition = false;
 
         while (!validPosition) {
@@ -31,7 +31,7 @@ class Boid {
     avoidOverlap(boids) {
         for (let boid of boids) {
             if (boid === this) continue;
-    
+
             let dist = Math.hypot(boid.x - this.x, boid.y - this.y);
             if (dist < this.separationDistance) {
                 let angle = Math.atan2(this.y - boid.y, this.x - boid.x);
@@ -39,7 +39,7 @@ class Boid {
                 this.vy += Math.sin(angle) * 0.5;
             }
         }
-    }    
+    }
 
     getNeighbors(boids) {
         return boids.filter(boid => {
@@ -127,22 +127,22 @@ class Boid {
         let cohesionForce = this.cohesion(boids);
         let separationForce = this.separation(boids);
         let alignmentForce = this.alignment(boids);
-    
+
         this.vx += cohesionForce.x + separationForce.x + alignmentForce.x;
         this.vy += cohesionForce.y + separationForce.y + alignmentForce.y;
-    
+
         this.avoidOverlap(boids); // Évite le chevauchement
-    
+
         this.limitSpeed();
         this.x += this.vx;
         this.y += this.vy;
-    
+
         this.handleBorderCollision();
     }
-    
+
 
     draw(ctx) {
-        ctx.fillStyle = "red";
+        ctx.fillStyle = "white";
         ctx.beginPath();
         ctx.arc(this.x, this.y, 7, 0, Math.PI * 2);
         ctx.fill();

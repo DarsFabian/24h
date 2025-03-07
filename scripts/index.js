@@ -159,6 +159,8 @@ const check_snake_death = () => {
 
         if (distance < non_boids_speed) {
             game_running = false;
+            score = 0;
+            scoreElement.textContent = score;
             document.getElementById("gameOverScreen").style.display = "block";
         }
     }
@@ -211,6 +213,8 @@ const update_snake = () => {
     if (head_x < 0 || head_x > canvas_size || head_y < 0 || head_y > canvas_size) {
         console.log("Game Over - Bordure touchée");
         game_running = false;
+        score = 0;
+        scoreElement.textContent = score;
         document.getElementById("gameOverScreen").style.display = "block";
         return; // Stoppe l'exécution de update_snake()
     }

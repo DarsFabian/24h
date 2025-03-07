@@ -6,6 +6,7 @@ class Boid {
         this.vx = (Math.random() - 0.5) * 2;
         this.vy = (Math.random() - 0.5) * 2;
         this.maxSpeed = 2;
+        this.minSpeed = 0.5; // Évite que le boid s'arrête complètement
         this.viewDistance = 50;
         this.separationDistance = 40;
         this.borderPadding = 10;
@@ -72,23 +73,28 @@ class Boid {
     handleBorderCollision() {
         if (this.x < this.borderPadding) {
             this.vx = Math.abs(this.vx);
-            this.x = this.borderPadding;
-        }
-        if (this.x > this.canvasSize - this.borderPadding) {
+        } else if (this.x > this.canvasSize - this.borderPadding) {
             this.vx = -Math.abs(this.vx);
-            this.x = this.canvasSize - this.borderPadding;
         }
         if (this.y < this.borderPadding) {
             this.vy = Math.abs(this.vy);
-            this.y = this.borderPadding;
-        }
-        if (this.y > this.canvasSize - this.borderPadding) {
+        } else if (this.y > this.canvasSize - this.borderPadding) {
             this.vy = -Math.abs(this.vy);
-            this.y = this.canvasSize - this.borderPadding;
         }
     }
 
-    update(boids, mouseX, mouseY, snakeHeadX, snakeHeadY) {
+    limitSpeed() {
+        let speed = Math.hypot(this.vx, this.vy);
+        if (speed > this.maxSpeed) {
+            this.vx = (this.vx / speed) * this.maxSpeed;
+            this.vy = (this.vy / speed) * this.maxSpeed;
+        } else if (speed < this.minSpeed) {
+            this.vx = (this.vx / speed) * this.minSpeed;
+            this.vy = (this.vy / speed) * this.minSpeed;
+        }
+    }
+
+    update(boids) {
         let cohesionForce = this.cohesion(boids);
         let separationForce = this.separation(boids);
         let alignmentForce = this.alignment(boids);
@@ -96,12 +102,7 @@ class Boid {
         this.vx += cohesionForce.x + separationForce.x + alignmentForce.x;
         this.vy += cohesionForce.y + separationForce.y + alignmentForce.y;
 
-        let speed = Math.hypot(this.vx, this.vy);
-        if (speed > this.maxSpeed) {
-            this.vx = (this.vx / speed) * this.maxSpeed;
-            this.vy = (this.vy / speed) * this.maxSpeed;
-        }
-
+        this.limitSpeed();
         this.x += this.vx;
         this.y += this.vy;
 

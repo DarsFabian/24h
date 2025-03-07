@@ -243,9 +243,23 @@ const update_snake = () => {
         snake_positions.pop();
 };
 
-const update_ennemy = () => {
+const update_ennemy = (target_pos) => {
+    const dx = target_pos.x - ennemy.position.x;
+    const dy = target_pos.y - ennemy.position.y;
+    const distance = Math.sqrt(dx ** 2 + dy ** 2);
+    if (distance > 0) {
+        const dirX = dx / distance;
+        const dirY = dy / distance;
 
-}
+        if (distance > non_boids_speed) {
+            ennemy.position.x += dirX * non_boids_speed;
+            ennemy.position.y += dirY * non_boids_speed;
+        } else {
+            ennemy.position.x = target_pos.x;
+            ennemy.position.y = target_pos.y;
+        }
+    }
+};
 
 /**
  * Check if the snake collided with an active boid
@@ -322,6 +336,7 @@ const draw = () => {
 
 const game_loop = () => {
     update_snake();
+    update_ennemy(snake_positions[0]);
 
     check_boids_collision();
     for (let boid of boids)

@@ -17,7 +17,7 @@ let snake_length = 100;
 const head_proportion = (snake_length / 100) * 10;
 let non_boids_speed = 1.5;
 const boids_number = 10;
-const max_turn_angle = Math.PI / 32; // ~5 degrees max turn per frame
+const max_turn_angle = Math.PI / 16; // ~5 degrees max turn per frame
 let current_direction = Math.PI / 2;
 
 /**
@@ -28,6 +28,10 @@ let mouse_x = center + 100;
 let mouse_y = center + 100;
 let prev_mouse_x = mouse_x;
 let prev_mouse_y = mouse_y;
+
+let score = 0;
+const scoreElement = document.getElementById("score");
+
 
 /**
  * Game flags
@@ -64,8 +68,8 @@ canvas.addEventListener("mousemove", event => {
 const create_boids = () => {
     boids = [];
     for (let i = 0; i < boids_number; i++)
-        boids.push(new Boid(canvas_size));
-}
+        boids.push(new Boid(canvas_size, boids)); // Passer la liste
+};
 
 const check_snake_death = () => {
     const snake_head = snake_positions[0];
@@ -165,18 +169,24 @@ const check_boids_collision = () => {
         const boid = boids[i];
         const snake_head = snake_positions[0];
 
-        // Calculer la distance entre la tête du Snake et le Boid
+        // Calcul de la distance entre la tête du Snake et le Boid
         let distance = Math.hypot(snake_head.x - boid.x, snake_head.y - boid.y);
 
         // Si la tête touche le Boid, on le mange
         if (distance < snake_width / 2 + 7) { // 7 étant le rayon du Boid
             snake_length += 10; // Augmenter la taille du Snake
             boids.splice(i, 1); // Supprimer le Boid mangé
-            boids.push(new Boid(canvas_size)); // Ajouter un nouveau Boid
+            boids.push(new Boid(canvas_size,boids)); // Ajouter un nouveau Boid
+
+            // Augmenter le score de 100 et l'afficher
+            score += 100;
+            scoreElement.textContent = score;
+            
             break; // Sortir de la boucle pour éviter des erreurs d'index
         }
     }
 };
+
 
 const draw = () => {
     context.fillStyle = "#222";

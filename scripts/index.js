@@ -314,18 +314,6 @@ const draw = () => {
         Math.PI * 2
     );
     context.fill();
-
-    // Goal position for pathfinding
-    context.fillStyle = "orange";
-    context.beginPath();
-    context.arc(
-        path[path.length - 1].x,
-        path[path.length - 1].y,
-        10,
-        0,
-        Math.PI * 2
-    );
-    context.fill();
 }
 
 const game_loop = () => {

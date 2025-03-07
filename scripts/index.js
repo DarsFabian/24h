@@ -79,8 +79,9 @@ function astar(start, goal) {
         let current = openList.shift();
 
         const distance = Math.hypot(current.pos.x - goal.x, current.pos.y - goal.y);
+        console.log(distance);
 
-        if (distance <= non_boids_speed) {
+        if (distance < snake_width) {
             let path = [];
             while (current) {
                 path.push(current.pos);
@@ -92,14 +93,14 @@ function astar(start, goal) {
         closedList.add(`${current.pos.x},${current.pos.y}`);
 
         let neighbors = [
-            { x: current.pos.x + non_boids_speed, y: current.pos.y },
-            { x: current.pos.x - non_boids_speed, y: current.pos.y },
-            { x: current.pos.x, y: current.pos.y + non_boids_speed },
-            { x: current.pos.x, y: current.pos.y - non_boids_speed },
-            { x: current.pos.x + non_boids_speed, y: current.pos.y + non_boids_speed },
-            { x: current.pos.x - non_boids_speed, y: current.pos.y + non_boids_speed },
-            { x: current.pos.x + non_boids_speed, y: current.pos.y - non_boids_speed },
-            { x: current.pos.x - non_boids_speed, y: current.pos.y - non_boids_speed }
+            { x: current.pos.x + 10, y: current.pos.y },
+            { x: current.pos.x - 10, y: current.pos.y },
+            { x: current.pos.x, y: current.pos.y + 10 },
+            { x: current.pos.x, y: current.pos.y - 10 },
+            { x: current.pos.x + 10, y: current.pos.y + 10 },
+            { x: current.pos.x - 10, y: current.pos.y + 10 },
+            { x: current.pos.x + 10, y: current.pos.y - 10 },
+            { x: current.pos.x - 10, y: current.pos.y - 10 }
         ];
 
         for (let neighbor of neighbors) {

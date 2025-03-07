@@ -31,6 +31,9 @@ let prev_mouse_y = mouse_y;
 
 let score = 0;
 const scoreElement = document.getElementById("score");
+let bestScore = 0;
+const bestScoreElement = document.getElementById("bestScore");
+
 
 
 /**
@@ -159,8 +162,9 @@ const check_snake_death = () => {
 
         if (distance < non_boids_speed) {
             game_running = false;
-            score = 0;
-            scoreElement.textContent = score;
+            score = 0; // Réinitialisation du score
+            scoreElement.textContent = score; // Mettre à jour l'affichage du score
+
             document.getElementById("gameOverScreen").style.display = "block";
         }
     }
@@ -272,11 +276,16 @@ const check_boids_collision = () => {
             score += 100;
             scoreElement.textContent = score;
 
+            // Vérifier si c'est un nouveau meilleur score
+            if (score > bestScore) {
+                bestScore = score;
+                bestScoreElement.textContent = bestScore;
+            }
+
             break; // Sortir de la boucle pour éviter des erreurs d'index
         }
     }
 };
-
 
 const draw = () => {
     context.fillStyle = "#222";
@@ -364,4 +373,9 @@ document.getElementById("restartButton").addEventListener("click", () => {
     document.getElementById("gameOverScreen").style.display = "none";
     accueil.style.display = "flex";
     canvas.style.display = "none";
+
+    // Réinitialiser uniquement le score actuel
+    score = 0;
+    scoreElement.textContent = score;
 });
+

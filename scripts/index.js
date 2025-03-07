@@ -159,7 +159,6 @@ const check_snake_death = () => {
 
         if (distance < non_boids_speed) {
             game_running = false;
-            score = 0;
             document.getElementById("gameOverScreen").style.display = "block";
         }
     }
@@ -304,11 +303,24 @@ const draw = () => {
     let path = astar(ennemy.position, snake_positions[0]);
     console.log("Pathfinding ended.");
 
+    // Starting position for pathfinding
     context.fillStyle = "blue";
     context.beginPath();
     context.arc(
         path[0].x,
         path[0].y,
+        10,
+        0,
+        Math.PI * 2
+    );
+    context.fill();
+
+    // Goal position for pathfinding
+    context.fillStyle = "orange";
+    context.beginPath();
+    context.arc(
+        path[path.length - 1].x,
+        path[path.length - 1].y,
         10,
         0,
         Math.PI * 2
@@ -340,6 +352,8 @@ start_button.addEventListener("click", () => {
     game_running = true;
     accueil.style.display = "none";
     canvas.style.display = "block";
+
+    score = 0;
 
     snake_positions = [{
         x: Math.random() * (canvas_size - 200) + 100,

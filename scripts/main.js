@@ -95,13 +95,20 @@ function checkBoidCollision() {
     for (let i = 0; i < boids.length; i++) {
         let dist = Math.hypot(positions[0].x - boids[i].x, positions[0].y - boids[i].y);
         if (dist < 10) {
-            snakeLength += 5;
+            snakeLength += 5; // Augmenter la taille du Snake
+
+            // Supprimer l'ancien boid
             boids.splice(i, 1);
-            boids.push(new Boid());
+
+            // Ajouter un nouveau boid à une position aléatoire
+            let newBoid = new Boid(canvasSize);
+            boids.push(newBoid);
+
             break;
         }
     }
 }
+
 
 // --- Affichage ---
 function draw() {

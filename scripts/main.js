@@ -1,6 +1,5 @@
 import { Boid } from "./Boids.js"
 
-
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const startButton = document.getElementById("startButton");
@@ -10,7 +9,7 @@ canvas.width = canvasSize;
 canvas.height = canvasSize;
 
 const snakeSize = 10;
-let snakeLength = 20;
+let snakeLength = 100;
 let positions = [];
 let mouseX = canvasSize / 2;
 let mouseY = canvasSize / 2;
@@ -18,8 +17,9 @@ let lastMouseX = mouseX;
 let lastMouseY = mouseY;
 let gameRunning = false;
 
-// --- Limitation de vitesse ---
-const maxMouseSpeed = 8; // Vitesse max en pixels par frame
+// --- Speed parameters ---
+const maxMouseSpeed = 8; // Pixels per frame
+const snakeSpeed = 0.5;   // Pixels per frame
 
 // --- BOIDS VARIABLES ---
 const numBoids = 10;
@@ -48,11 +48,6 @@ canvas.addEventListener("mousemove", (event) => {
     }
 });
 
-// --- Interpolation fluide ---
-function lerp(start, end, amt) {
-    return (1 - amt) * start + amt * end;
-}
-
 // --- Création des boids ---
 function createBoids() {
     boids = [];
@@ -65,10 +60,31 @@ function createBoids() {
 function updateSnake() {
     if (!gameRunning) return;
 
-    let newHeadX = lerp(positions.length > 0 ? positions[0].x : mouseX, mouseX, 0.2);
-    let newHeadY = lerp(positions.length > 0 ? positions[0].y : mouseY, mouseY, 0.2);
+    const currentHead = positions[0] || { x: mouseX, y: mouseY };
+    let dx = mouseX - currentHead.x;
+    let dy = mouseY - currentHead.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    let newHeadX, newHeadY;
+
+    if (distance > 0) {
+        if (distance > snakeSpeed) {
+            const ratio = snakeSpeed / distance;
+            newHeadX = currentHead.x + dx * ratio;
+            newHeadY = currentHead.y + dy * ratio;
+        } else {
+            // Snap to mouse position when close
+            newHeadX = mouseX;
+            newHeadY = mouseY;
+        }
+    } else {
+        newHeadX = currentHead.x;
+        newHeadY = currentHead.y;
+    }
+
     positions.unshift({ x: newHeadX, y: newHeadY });
 
+    // Keep snake at correct length
     while (positions.length > snakeLength) {
         positions.pop();
     }
@@ -119,11 +135,14 @@ function gameLoop() {
         requestAnimationFrame(gameLoop);
 }
 
-// --- Démarrer le jeu ---
 startButton.addEventListener("click", () => {
     gameRunning = true;
     startButton.style.display = "none";
     canvas.style.display = "block";
+
+    // Initialize the snake with one segment at the mouse's starting position
+    positions = [{ x: mouseX, y: mouseY }];
+
     createBoids();
     gameLoop();
 });

@@ -64,7 +64,15 @@ const compute_objective = () => {
 }
 
 function isSnakeBody(x, y) {
-    return snake_positions.some(segment => segment.x === x && segment.y === y);
+    for (let i = head_proportion; i < snake_positions.length; i++) {
+        const segment = snake_positions[i];
+        const distance = Math.hypot(segment.x - x, segment.y - y);
+
+        if (distance <= snake_width + 5) return true;
+    }
+
+    return false;
+    //return snake_positions.some(segment => segment.x === x && segment.y === y);
 }
 
 function astar(start, goal) {
@@ -82,7 +90,6 @@ function astar(start, goal) {
         let current = openList.shift();
 
         const distance = Math.hypot(current.pos.x - goal.x, current.pos.y - goal.y);
-        console.log(distance);
 
         if (distance < snake_width) {
             let path = [];
@@ -108,7 +115,6 @@ function astar(start, goal) {
 
         for (let neighbor of neighbors) {
             if (
-                neighbor.x < 0 || neighbor.y < 0 ||
                 neighbor.x >= canvas_size || neighbor.y >= canvas_size ||
                 closedList.has(`${neighbor.x},${neighbor.y}`) ||
                 isSnakeBody(neighbor.x, neighbor.y)
@@ -215,7 +221,6 @@ const update_snake = () => {
     let head_y = current_head.y + Math.sin(current_direction) * non_boids_speed;
 
     if (head_x < 0 || head_x > canvas_size || head_y < 0 || head_y > canvas_size) {
-        console.log("Game Over - Bordure touchée");
         game_running = false;
         score = 0;
         scoreElement.textContent = score;
@@ -316,13 +321,21 @@ const draw = () => {
         boid.draw(context);
 
     let path = astar(ennemy.position, snake_positions[0]);
+    let x, y;
+    if (path.length == 0) {
+        x = snake_positions[0].x;
+        y = snake_positions[0].y;
+    } else {
+        x = path[0].x;
+        y = path[0].y;
+    }
 
     // Starting position for pathfinding
     context.fillStyle = "blue";
     context.beginPath();
     context.arc(
-        path[0].x,
-        path[0].y,
+        x,
+        y,
         10,
         0,
         Math.PI * 2

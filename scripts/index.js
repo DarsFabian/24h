@@ -2,6 +2,7 @@ import { Boid } from "./Boids.js"
 
 const canvas = document.getElementById("gameCanvas");
 const context = canvas.getContext("2d");
+const accueil = document.getElementById("accueil");
 const start_button = document.getElementById("startButton");
 
 const canvas_size = 600;
@@ -198,7 +199,7 @@ const game_loop = () => {
 
 start_button.addEventListener("click", () => {
     game_running = true;
-    start_button.style.display = "none";
+    accueil.style.display = "none";
     canvas.style.display = "block";
 
     snake_positions = [{

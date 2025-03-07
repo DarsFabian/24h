@@ -84,3 +84,29 @@ button:hover {
     color: #ffcc00;
     margin-top: 10px;
 }
+
+@media (max-width: 768px) {
+    #accueil {
+        height: auto;
+        padding: 50px 20px;
+    }
+    .nom {
+        max-width: 100px;
+    }
+    .logo {
+        max-width: 70px;
+    }
+    button {
+        font-size: 18px;
+        padding: 12px 24px;
+    }
+    #scoreBoard {
+        top: 10px;
+        right: 10px;
+        font-size: 18px;
+        padding: 10px 15px;
+    }
+    #scoreBoard span {
+        font-size: 22px;
+    }
+}

@@ -4,7 +4,7 @@ class Boid {
         this.viewDistance = 50;
         this.separationDistance = 20;
         this.borderPadding = 10;
-        this.maxSpeed = 2;
+        this.maxSpeed = 1.5;
         this.minSpeed = 0.5;
 
         let validPosition = false;

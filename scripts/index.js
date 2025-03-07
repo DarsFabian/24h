@@ -9,15 +9,24 @@ const canvas_size = 600;
 canvas.width = canvas_size;
 canvas.height = canvas_size;
 
+
+let bestScore = localStorage.getItem("bestScore") ? parseInt(localStorage.getItem("bestScore")) : 0;
+const bestScoreElement = document.getElementById("bestScore"); // Assure-toi d'avoir un élément HTML pour afficher le meilleur score
+bestScoreElement.textContent = bestScore;
+
 /**
  * Defining game parameters and draw rules
  */
 const snake_width = 10;
-let snake_length = 100;
+let snake_length = 10;
+const max_snake_length = 20; // Longueur maximale du Snake
 const head_proportion = (snake_length / 100) * 10;
 let non_boids_speed = 1.5;
-const boids_number = 10;
-const max_turn_angle = Math.PI / 16; // ~5 degrees max turn per frame
+const min_speed = 1.5; // Vitesse de départ
+const max_speed = 4;   // Vitesse maximale atteignable
+const speed_increment = 3000; // Score nécessaire pour atteindre la vitesse max
+const boids_number = 25;
+const max_turn_angle = Math.PI / 5; // ~5 degrees max turn per frame
 let current_direction = Math.PI / 2;
 
 /**
@@ -37,7 +46,7 @@ const scoreElement = document.getElementById("score");
  */
 let game_running = false;
 
-let enemy_speed = 1; // Ajuste cette valeur pour modifier la vitesse de l'ennemi
+let enemy_speed = 1.5; // Ajuste cette valeur pour modifier la vitesse de l'ennemi
 let historySize = 10;
 /**
  * Game data
@@ -125,14 +134,14 @@ function astar(start, goal) {
 }
 
 function predictSnakeFuturePosition() {
-    // Use head positions instead of tail.
-    let n = Math.min(snake_positions.length, historySize);
-    // Get the most recent n positions from the head (index 0 is the head)
-    let recentPositions = snake_positions.slice(0, n);
-    // Reverse so that the oldest position comes first for regression
-    recentPositions = recentPositions.reverse();
+    if (snake_positions.length < 2) {
+        console.warn("🚨 Pas assez de positions pour prédire !");
+        return snake_positions[0]; // Retourne la tête du Snake comme fallback
+    }
 
-    // --- X regression ---
+    let n = Math.min(snake_positions.length, historySize);
+    let recentPositions = snake_positions.slice(0, n).reverse();
+
     let sumWX = 0, sumW_X = 0, sumWXY_X = 0, sumWX2_X = 0, sumW = 0;
     for (let i = 0; i < n; i++) {
         let t = i + 1;
@@ -143,14 +152,15 @@ function predictSnakeFuturePosition() {
         sumWX2_X += weight * t * t;
         sumW += weight;
     }
+
     if (sumW === 0) {
         return recentPositions[recentPositions.length - 1];
     }
+
     let denomX = sumW * sumWX2_X - sumWX * sumWX;
     let slopeX = denomX !== 0 ? (sumW * sumWXY_X - sumWX * sumW_X) / denomX : 0;
     let interceptX = sumW !== 0 ? (sumW_X - slopeX * sumWX) / sumW : 0;
 
-    // --- Y regression ---
     let sumW_Y = 0, sumWXY_Y = 0, sumWX2_Y = 0;
     for (let i = 0; i < n; i++) {
         let t = i + 1;
@@ -159,22 +169,27 @@ function predictSnakeFuturePosition() {
         sumWXY_Y += weight * t * recentPositions[i].y;
         sumWX2_Y += weight * t * t;
     }
+
     let denomY = sumW * sumWX2_Y - sumWX * sumWX;
     let slopeY = denomY !== 0 ? (sumW * sumWXY_Y - sumWX * sumW_Y) / denomY : 0;
     let interceptY = sumW !== 0 ? (sumW_Y - slopeY * sumWX) / sumW : 0;
 
-    // Increase prediction horizon by adjusting this constant (e.g., n + 3, n + 10, etc.)
     let predictionFactor = n + 20;
     let predictedX = slopeX * predictionFactor + interceptX;
     let predictedY = slopeY * predictionFactor + interceptY;
 
-    // Round predicted values to the nearest multiple of 10
-    predictedX = Math.round(predictedX / 10) * 10;
-    predictedY = Math.round(predictedY / 10) * 10;
+    if (isNaN(predictedX) || isNaN(predictedY)) {
+        console.error("❌ Prédiction invalide !");
+        return snake_positions[0];
+    }
 
-    console.log("🔮 Predicted Position (Rounded to 10s):", { x: predictedX, y: predictedY });
+    predictedX = Math.max(10, Math.min(canvas_size - 10, predictedX));
+    predictedY = Math.max(10, Math.min(canvas_size - 10, predictedY));
+
+    console.log("🔮 Position prédite après correction :", { x: predictedX, y: predictedY });
     return { x: predictedX, y: predictedY };
 }
+
 
 
 
@@ -208,7 +223,7 @@ const create_boids = () => {
 const check_snake_death = () => {
     const snake_head = snake_positions[0];
 
-    for (let i = head_proportion + 1; i < snake_positions.length; i++) {
+    for (let i = head_proportion + 10; i < snake_positions.length; i++) {
         const position = snake_positions[i];
         const distance = Math.hypot(snake_head.x - position.x, snake_head.y - position.y);
 
@@ -219,6 +234,12 @@ const check_snake_death = () => {
             document.getElementById("gameOverScreen").style.display = "block";
         }
     }
+    if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem("bestScore", bestScore);
+        bestScoreElement.textContent = bestScore;
+    }
+    
 };
 
 const update_snake = () => {
@@ -271,8 +292,12 @@ const update_snake = () => {
         score = 0;
         scoreElement.textContent = score;
         document.getElementById("gameOverScreen").style.display = "block";
-        return; // Stoppe l'exécution de update_snake()
+        return;
     }
+
+    non_boids_speed = min_speed + ((max_speed - min_speed) * (score / speed_increment));
+    non_boids_speed = Math.min(non_boids_speed, max_speed);
+
 
     /**
      * If close enough, snap the head to the mouse
@@ -291,17 +316,16 @@ const update_snake = () => {
      */
     snake_positions.unshift({ x: head_x, y: head_y });
 
-    /**
-     * Keep snake at correct length
-     */
-    while (snake_positions.length > snake_length)
-        snake_positions.pop();
+    while (snake_positions.length > Math.min(snake_length, max_snake_length)) {
+    snake_positions.pop();
+}
+
 };
 
 const update_ennemy = () => {
     if (!game_running) return;
 
-    if (score < 100) {
+    if (score < 2000) {
         // L'ennemi est caché avant 1000 points
         ennemy.position.x = -100; 
         ennemy.position.y = -100;
@@ -309,7 +333,7 @@ const update_ennemy = () => {
     }
 
     // S'il apparaît pour la première fois, on lui donne une position initiale
-    if (score === 100 && (ennemy.position.x === -100 || ennemy.position.y === -100)) {
+    if (score === 2000 && (ennemy.position.x === -100 || ennemy.position.y === -100)) {
         console.log("👹 L'ennemi apparaît !");
         ennemy.position.x = Math.random() * (canvas_size - 50) + 25;
         ennemy.position.y = Math.random() * (canvas_size - 50) + 25;
@@ -317,7 +341,7 @@ const update_ennemy = () => {
 
     let targetPos;
     
-    if (score < 200) {
+    if (score < 4000) {
         // L'ennemi suit la tête du Snake avec A*
         let path = astar(ennemy.position, snake_positions[0]);
         enemy_speed = 0.7;
@@ -377,6 +401,9 @@ const check_boids_collision = () => {
 
         // Calcul de la distance entre la tête du Snake et le Boid
         let distance = Math.hypot(snake_head.x - boid.x, snake_head.y - boid.y);
+        if (level <= 3 && snake_length < max_snake_length) {
+            snake_length += 10; // Augmenter la taille du Snake
+        }
 
         // Si la tête touche le Boid, on le mange
         if (distance < snake_width / 2 + 7) { // 7 étant le rayon du Boid
@@ -391,6 +418,12 @@ const check_boids_collision = () => {
             // Augmenter le score de 100 et l'afficher
             score += 100;
             scoreElement.textContent = score;
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem("bestScore", bestScore);
+                bestScoreElement.textContent = bestScore;
+            }
+            
 
             break; // Sortir de la boucle pour éviter des erreurs d'index
         }
@@ -454,8 +487,6 @@ const game_loop = () => {
         requestAnimationFrame(game_loop);
     }
 };
-
-
 
 
 

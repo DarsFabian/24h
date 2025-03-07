@@ -5,10 +5,10 @@ class Boid {
         this.y = Math.random() * canvasSize;
         this.vx = (Math.random() - 0.5) * 2;
         this.vy = (Math.random() - 0.5) * 2;
-        this.maxSpeed = 3;
+        this.maxSpeed = 2;
         this.viewDistance = 50;
-        this.separationDistance = 20;
-        this.borderPadding = 5;
+        this.separationDistance = 40;
+        this.borderPadding = 10;
     }
 
     getNeighbors(boids) {
@@ -69,30 +69,6 @@ class Boid {
         };
     }
 
-    escapeFromMouse(mouseX, mouseY) {
-        let escapeRadius = 70;
-        let dist = Math.hypot(mouseX - this.x, mouseY - this.y);
-        if (dist < escapeRadius) {
-            let escapeForce = (escapeRadius - dist) / escapeRadius;
-            let moveX = (this.x - mouseX) * escapeForce * 0.1;
-            let moveY = (this.y - mouseY) * escapeForce * 0.1;
-            return { x: moveX, y: moveY };
-        }
-        return { x: 0, y: 0 };
-    }
-
-    escapeFromSnake(snakeHeadX, snakeHeadY) {
-        let escapeRadius = 50; // Distance où les boids commencent à fuir le Snake
-        let dist = Math.hypot(snakeHeadX - this.x, snakeHeadY - this.y);
-        if (dist < escapeRadius) {
-            let escapeForce = (escapeRadius - dist) / escapeRadius;
-            let moveX = (this.x - snakeHeadX) * escapeForce * 0.15; // Force plus forte pour s’éloigner rapidement
-            let moveY = (this.y - snakeHeadY) * escapeForce * 0.15;
-            return { x: moveX, y: moveY };
-        }
-        return { x: 0, y: 0 };
-    }
-
     handleBorderCollision() {
         if (this.x < this.borderPadding) {
             this.vx = Math.abs(this.vx);
@@ -116,11 +92,9 @@ class Boid {
         let cohesionForce = this.cohesion(boids);
         let separationForce = this.separation(boids);
         let alignmentForce = this.alignment(boids);
-        let escapeMouseForce = this.escapeFromMouse(mouseX, mouseY);
-        let escapeSnakeForce = this.escapeFromSnake(snakeHeadX, snakeHeadY);
 
-        this.vx += cohesionForce.x + separationForce.x + alignmentForce.x + escapeMouseForce.x + escapeSnakeForce.x;
-        this.vy += cohesionForce.y + separationForce.y + alignmentForce.y + escapeMouseForce.y + escapeSnakeForce.y;
+        this.vx += cohesionForce.x + separationForce.x + alignmentForce.x;
+        this.vy += cohesionForce.y + separationForce.y + alignmentForce.y;
 
         let speed = Math.hypot(this.vx, this.vy);
         if (speed > this.maxSpeed) {
@@ -137,7 +111,7 @@ class Boid {
     draw(ctx) {
         ctx.fillStyle = "red";
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, 7, 0, Math.PI * 2);
         ctx.fill();
     }
 }
